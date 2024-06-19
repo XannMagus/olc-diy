@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
 
 use crate::solver::Expression;
-use crate::tokenizer::{Token, TokenKind, TokenQueue};
+use crate::lexer::{Token, TokenKind, TokenQueue};
 
 pub struct Compiler {
     operator_stack: Vec<Token>,

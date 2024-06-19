@@ -1,17 +1,16 @@
-use std::collections::VecDeque;
 use std::fmt::{Display, Formatter};
 
 use anyhow::{anyhow, Result};
+use crate::lexer::{TokenKind, TokenQueue};
 
-use crate::tokenizer::{Token, TokenKind};
 
 #[derive(Debug)]
 pub struct Expression {
-    rpn: VecDeque<Token>,
+    rpn: TokenQueue,
 }
 
 impl Expression {
-    pub fn new(rpn: VecDeque<Token>) -> Self {
+    pub fn new(rpn: TokenQueue) -> Self {
         Self { rpn }
     }
 

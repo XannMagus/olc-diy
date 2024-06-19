@@ -1,10 +1,11 @@
 use std::io::{BufRead, stdin};
+
 use anyhow::Result;
 
 use crate::compiler::Compiler;
-use crate::tokenizer::{display_queue, Tokenizer};
+use crate::lexer::{display_queue, Lexer};
 
-mod tokenizer;
+mod lexer;
 mod solver;
 mod compiler;
 
@@ -38,9 +39,8 @@ fn main() {
 }
 
 fn process(expr: &String) -> Result<()> {
-    let token_queue = Tokenizer::new(expr.to_string()).parse()?;
+    let token_queue = Lexer::new(expr.to_string()).parse()?;
     println!("{}", display_queue(&token_queue));
-
 
     let expr = Compiler::new().to_expression(&token_queue)?;
     println!("{}", expr.solve()?);
