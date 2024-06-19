@@ -1,8 +1,8 @@
 use std::fmt::{Display, Formatter};
 
 use anyhow::{anyhow, Result};
-use crate::lexer::{TokenKind, TokenQueue};
 
+use crate::lexer::{TokenKind, TokenQueue};
 
 #[derive(Debug)]
 pub struct Expression {
@@ -12,62 +12,6 @@ pub struct Expression {
 impl Expression {
     pub fn new(rpn: TokenQueue) -> Self {
         Self { rpn }
-    }
-
-    pub fn display_infix(&self) -> Result<String> {
-        let mut work_stack: Vec<String> = Vec::new();
-        let mut iter = self.rpn.iter().peekable();
-
-        while let Some(token) = iter.next() {
-            match token.kind() {
-                TokenKind::NumericLiteral => {
-                    work_stack.push(token.as_string());
-                }
-                TokenKind::Operator(operator) => {
-                    if operator.arity() == 2 {
-                        let Some(right) = work_stack.pop() else { return Err(anyhow!("Malformed Expression")); };
-                        let Some(left) = work_stack.pop() else { return Err(anyhow!("Malformed Expression")); };
-
-                        if iter.peek().is_none() {
-                            work_stack.push(format!("{left} {operator} {right}"));
-                        } else {
-                            work_stack.push(format!("({left} {operator} {right})"));
-                        }
-                    } else if operator.arity() == 1 {
-                        let Some(operand) = work_stack.pop() else { return Err(anyhow!("Malformed Expression")); };
-
-                        work_stack.push(format!("{operator}{operand}"));
-                    }
-                }
-                _ => {}
-            }
-        }
-
-        Ok(work_stack.pop().unwrap())
-    }
-
-    pub fn display_postfix(&self) -> Result<String> {
-        Ok(
-            self.rpn.iter().fold(String::new(), |mut acc, x| {
-                if !acc.is_empty() {
-                    acc.push(' ');
-                }
-                acc.push_str(&x.as_string());
-                acc
-            })
-        )
-    }
-
-    pub fn debug_display(&self) -> Result<String> {
-        Ok(
-            self.rpn.iter().fold(String::new(), |mut acc, x| {
-                if !acc.is_empty() {
-                    acc.push('\n');
-                }
-                acc.push_str(&x.to_string());
-                acc
-            })
-        )
     }
 
     pub fn solve(&self) -> Result<f64> {
