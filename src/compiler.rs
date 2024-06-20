@@ -73,6 +73,8 @@ impl Compiler {
                 }
                 TokenKind::OpeningScope |
                 TokenKind::ClosingScope |
+                TokenKind::OpeningBracket |
+                TokenKind::ClosingBracket |
                 TokenKind::Symbol |
                 TokenKind::Separator |
                 TokenKind::Colon |

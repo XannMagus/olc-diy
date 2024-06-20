@@ -36,6 +36,10 @@ struct ParenthesisOpen;
 
 struct ParenthesisClose;
 
+struct BracketOpen;
+
+struct BracketClose;
+
 struct ScopeOpen;
 
 struct ScopeClose;
@@ -64,6 +68,7 @@ pub struct TemporaryData<'a> {
     decimal_point_found: bool,
     paren_balance_check: u8,
     scope_balance_check: u8,
+    bracket_balance_check: u8,
 }
 
 impl State for StartState {
@@ -108,6 +113,10 @@ impl State for NewToken {
                 Ok((Box::new(ParenthesisOpen), temporary_data))
             } else if ')' == c {
                 Ok((Box::new(ParenthesisClose), temporary_data))
+            } else if '[' == c {
+                Ok((Box::new(BracketOpen), temporary_data))
+            } else if ']' == c {
+                Ok((Box::new(BracketClose), temporary_data))
             } else if '{' == c {
                 Ok((Box::new(ScopeOpen), temporary_data))
             } else if '}' == c {
@@ -362,6 +371,27 @@ impl State for ParenthesisClose {
     }
 }
 
+impl State for BracketOpen {
+
+    fn handle<'a>(self: Box<BracketOpen>, temporary_data: TemporaryData<'a>) -> Result<(Box<dyn State>, TemporaryData<'a>)> {
+        single_character_handler(temporary_data, |temp: &mut TemporaryData| { temp.bracket_balance_check += 1; }, Token::open_bracket)
+    }
+
+    fn is_final(&self) -> bool {
+        false
+    }
+}
+
+impl State for BracketClose {
+    fn handle<'a>(self: Box<BracketClose>, temporary_data: TemporaryData<'a>) -> Result<(Box<dyn State>, TemporaryData<'a>)> {
+        single_character_handler(temporary_data, |temp: &mut TemporaryData| { temp.bracket_balance_check -= 1; }, Token::close_bracket)
+    }
+
+    fn is_final(&self) -> bool {
+        false
+    }
+}
+
 impl State for ScopeOpen {
 
     fn handle<'a>(self: Box<ScopeOpen>, temporary_data: TemporaryData<'a>) -> Result<(Box<dyn State>, TemporaryData<'a>)> {
@@ -515,6 +545,7 @@ impl<'a> TemporaryData<'a> {
             decimal_point_found: false,
             paren_balance_check: 0,
             scope_balance_check: 0,
+            bracket_balance_check: 0,
         }
     }
 

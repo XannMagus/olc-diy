@@ -114,6 +114,22 @@ impl Token {
         }
     }
 
+    fn open_bracket() -> Self {
+        Self {
+            kind: TokenKind::OpeningBracket,
+            value: None,
+            id: "[".to_string(),
+        }
+    }
+
+    fn close_bracket() -> Self {
+        Self {
+            kind: TokenKind::ClosingBracket,
+            value: None,
+            id: "]".to_string(),
+        }
+    }
+
     fn open_scope() -> Self {
         Self {
             kind: TokenKind::OpeningScope,
