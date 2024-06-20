@@ -1,5 +1,7 @@
-use anyhow::anyhow;
 use std::fmt::{Display, Formatter};
+
+use anyhow::anyhow;
+
 use crate::lexer::shared_types::Token;
 use crate::lexer::shared_types::token_kinds::TokenKind;
 
@@ -12,6 +14,7 @@ pub struct Operator {
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 enum OperatorKind {
+    // Arithmetic
     Exp,
     Product,
     Quotient,
@@ -19,6 +22,16 @@ enum OperatorKind {
     Sum,
     Negate,
     Positive,
+    // Logical
+    LogicalOr,
+    LogicalAnd,
+    LogicalNot,
+    Equals,
+    Different,
+    GreaterThan,
+    GreaterThanEqual,
+    LessThan,
+    LessThanEqual,
 }
 
 impl Operator {
@@ -41,11 +54,32 @@ impl Operator {
         }
     }
 
+    pub fn logical_compute_2(&self, left: bool, right: bool) -> bool {
+        match self.kind {
+            OperatorKind::LogicalOr => left || right,
+            OperatorKind::LogicalAnd => left && right,
+            OperatorKind::Equals => left == right,
+            OperatorKind::Different => left != right,
+            OperatorKind::GreaterThan => left > right,
+            OperatorKind::GreaterThanEqual => left >= right,
+            OperatorKind::LessThan => left < right,
+            OperatorKind::LessThanEqual => left <= right,
+            _ => true,
+        }
+    }
+
     pub fn compute_1(&self, operand: f64) -> f64 {
         match self.kind {
             OperatorKind::Negate => -operand,
             OperatorKind::Positive => operand,
-            _ => 0.0
+            _ => 0.0,
+        }
+    }
+
+    pub fn logical_compute_1(&self, operand: bool) -> bool {
+        match self.kind {
+            OperatorKind::LogicalNot => !operand,
+            _ => true,
         }
     }
 
@@ -57,7 +91,6 @@ impl Operator {
         };
 
         let out = match self.kind {
-            OperatorKind::Exp | OperatorKind::Product | OperatorKind::Quotient => self,
             OperatorKind::Difference =>
                 if unary {
                     Self::unary(OperatorKind::Negate, 5)
@@ -82,9 +115,25 @@ impl Operator {
                 } else {
                     Self::binary(OperatorKind::Sum, 2)
                 }
+            _ => self,
         };
 
         Ok(out)
+    }
+
+    pub fn is_logical(&self) -> bool {
+        match self.kind {
+            OperatorKind::LogicalOr |
+            OperatorKind::LogicalAnd |
+            OperatorKind::LogicalNot |
+            OperatorKind::Equals |
+            OperatorKind::Different |
+            OperatorKind::GreaterThan |
+            OperatorKind::GreaterThanEqual |
+            OperatorKind::LessThan |
+            OperatorKind::LessThanEqual => true,
+            _ => false
+        }
     }
 }
 
@@ -96,6 +145,15 @@ impl Operator {
             "*" => Ok(Self::binary(OperatorKind::Product, 3)),
             "/" => Ok(Self::binary(OperatorKind::Quotient, 3)),
             "^" | "**" => Ok(Self::binary(OperatorKind::Exp, 4)),
+            "!" => Ok(Self::unary(OperatorKind::LogicalNot, 4)),
+            "&&" => Ok(Self::binary(OperatorKind::LogicalAnd, 3)),
+            "||" => Ok(Self::binary(OperatorKind::LogicalOr, 3)),
+            "==" => Ok(Self::binary(OperatorKind::Equals, 1)),
+            "!=" => Ok(Self::binary(OperatorKind::Different, 1)),
+            ">" => Ok(Self::binary(OperatorKind::GreaterThan, 1)),
+            ">=" => Ok(Self::binary(OperatorKind::GreaterThanEqual, 1)),
+            "<" => Ok(Self::binary(OperatorKind::LessThan, 1)),
+            "<=" => Ok(Self::binary(OperatorKind::LessThanEqual, 1)),
             str => Err(anyhow!("Unknown Operator {str}"))
         }
     }
@@ -125,6 +183,15 @@ impl Display for OperatorKind {
             OperatorKind::Quotient => "/",
             OperatorKind::Difference | OperatorKind::Negate => "-",
             OperatorKind::Sum | OperatorKind::Positive => "+",
+            OperatorKind::LogicalOr => "||",
+            OperatorKind::LogicalAnd => "&&",
+            OperatorKind::LogicalNot => "!",
+            OperatorKind::Equals => "==",
+            OperatorKind::Different => "!=",
+            OperatorKind::GreaterThan => ">",
+            OperatorKind::GreaterThanEqual => ">=",
+            OperatorKind::LessThan => "<",
+            OperatorKind::LessThanEqual => "<=",
         };
         write!(f, "{representation}")
     }
