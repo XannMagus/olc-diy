@@ -45,6 +45,11 @@ struct EndOfStatement;
 
 struct SymbolName;
 
+struct StartComment;
+struct SingleLineComment;
+struct MultiLineCommentBody;
+struct MultiLineCommentEnd;
+
 #[derive(Debug)]
 pub struct TemporaryData<'a> {
     input: String,
@@ -82,6 +87,10 @@ impl State for NewToken {
             if WHITESPACE[c as usize] {
                 temporary_data.chars.next();
                 Ok((Box::new(Self), temporary_data))
+            } else if '/' == c {
+                temporary_data.current_token_string.push(c);
+                temporary_data.chars.next();
+                Ok((Box::new(StartComment), temporary_data))
             } else if NUMERIC_DIGITS[c as usize] {
                 Ok((if c == '0' {
                     temporary_data.current_token_string.push(c);
@@ -348,7 +357,7 @@ impl State for ParenthesisClose {
 impl State for ScopeOpen {
 
     fn handle<'a>(self: Box<ScopeOpen>, temporary_data: TemporaryData<'a>) -> Result<(Box<dyn State>, TemporaryData<'a>)> {
-   single_character_handler(temporary_data, |temp: &mut TemporaryData| { temp.scope_balance_check += 1; }, Token::open_scope)
+        single_character_handler(temporary_data, |temp: &mut TemporaryData| { temp.scope_balance_check += 1; }, Token::open_scope)
     }
 
     fn is_final(&self) -> bool {
@@ -402,6 +411,80 @@ impl State for EndState {
     }
 }
 
+impl State for StartComment {
+    fn handle<'a>(self: Box<Self>, mut temporary_data: TemporaryData<'a>) -> Result<(Box<dyn State>, TemporaryData<'a>)> {
+        if let Some(c) = temporary_data.chars.peek() {
+            match c {
+                '/' => Ok((Box::new(SingleLineComment), temporary_data)),
+                '*' => Ok((Box::new(MultiLineCommentBody), temporary_data)),
+                &_ => Ok((Box::new(OperatorState), temporary_data))
+            }
+        } else {
+            Err(anyhow!("[PARSER] Trailing slash"))
+        }
+    }
+
+    fn is_final(&self) -> bool {
+        false
+    }
+}
+
+impl State for SingleLineComment {
+    fn handle<'a>(self: Box<Self>, mut temporary_data: TemporaryData<'a>) -> Result<(Box<dyn State>, TemporaryData<'a>)> {
+        if let Some(&c) = temporary_data.chars.peek() {
+            temporary_data.chars.next();
+            if '\n' == c {
+                Ok((Box::new(NewToken), temporary_data))
+            } else {
+                Ok((self, temporary_data))
+            }
+        } else {
+            Ok((Box::new(EndState), temporary_data))
+        }
+    }
+
+    fn is_final(&self) -> bool {
+        false
+    }
+}
+
+impl State for MultiLineCommentBody {
+    fn handle<'a>(self: Box<Self>, mut temporary_data: TemporaryData<'a>) -> Result<(Box<dyn State>, TemporaryData<'a>)> {
+        if let Some(&c) = temporary_data.chars.peek() {
+            temporary_data.chars.next();
+            if '*' == c {
+                Ok((Box::new(MultiLineCommentEnd), temporary_data))
+            } else {
+                Ok((self, temporary_data))
+            }
+        } else {
+            Err(anyhow!("[PARSER] Unfinished multiline comment block"))
+        }
+    }
+
+    fn is_final(&self) -> bool {
+        false
+    }
+}
+
+impl State for MultiLineCommentEnd {
+    fn handle<'a>(self: Box<Self>, mut temporary_data: TemporaryData<'a>) -> Result<(Box<dyn State>, TemporaryData<'a>)> {
+        if let Some(&c) = temporary_data.chars.peek() {
+            if '/' == c {
+                temporary_data.chars.next();
+                Ok((Box::new(NewToken), temporary_data))
+            } else {
+                Ok((Box::new(MultiLineCommentBody), temporary_data))
+            }
+        } else {
+            Err(anyhow!("[PARSER] Unfinished multiline comment block"))
+        }
+    }
+
+    fn is_final(&self) -> bool {
+        false
+    }
+}
 
 impl<'a> TemporaryData<'a> {
     pub fn new(input: String, chars: Peekable<Chars<'a>>) -> TemporaryData<'a> {

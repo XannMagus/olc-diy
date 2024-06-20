@@ -20,6 +20,8 @@ fn main() {
             input.pop();
         }
 
+        input = input.replace("\\n", "\n");
+
         if input.eq_ignore_ascii_case("quit") || input.eq_ignore_ascii_case("exit") {
             println!("Exiting...");
             break;
