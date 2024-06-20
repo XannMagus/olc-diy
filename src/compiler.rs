@@ -77,7 +77,7 @@ impl Compiler {
                 TokenKind::Separator |
                 TokenKind::StringLiteral |
                 TokenKind::EndOfStatement |
-                TokenKind::Keyword => {
+                TokenKind::Keyword(_) => {
                     return Err(anyhow!("This is not handled yet!"));
                 }
                 TokenKind::Unknown => {

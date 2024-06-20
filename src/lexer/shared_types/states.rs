@@ -2,6 +2,7 @@ use std::iter::Peekable;
 use std::str::Chars;
 
 use anyhow::{anyhow, Result};
+use crate::lexer::shared_types::keywords::Keyword;
 use crate::lexer::shared_types::operators::Operator;
 use crate::lexer::shared_types::Token;
 use crate::lexer::TokenQueue;
@@ -208,8 +209,11 @@ impl State for SymbolName {
                 temporary_data.chars.next();
                 Ok((Box::new(Self), temporary_data))
             } else {
-                // todo! Handle Keywords
-                temporary_data.current_token = Token::symbol(&temporary_data.current_token_string);
+                if let Some(keyword) = Keyword::new(&temporary_data.current_token_string) {
+                    temporary_data.current_token = Token::from_keyword(keyword);
+                } else {
+                    temporary_data.current_token = Token::symbol(&temporary_data.current_token_string);
+                }
                 Ok((Box::new(CompleteToken), temporary_data))
             }
         } else {

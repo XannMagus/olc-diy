@@ -1,11 +1,12 @@
 use std::fmt::{Display, Formatter};
+use crate::lexer::shared_types::keywords::Keyword;
 use crate::lexer::shared_types::operators::Operator;
 pub use crate::lexer::shared_types::token_kinds::TokenKind;
 
 pub mod states;
 pub mod token_kinds;
 pub mod operators;
-
+pub mod keywords;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Token {
@@ -86,6 +87,14 @@ impl Token {
             kind: TokenKind::Operator(op),
             value: None,
             id: op.to_string(),
+        }
+    }
+
+    fn from_keyword(keyword: Keyword) -> Self {
+        Self {
+            kind: TokenKind::Keyword(keyword),
+            value: None,
+            id: keyword.to_string(),
         }
     }
 

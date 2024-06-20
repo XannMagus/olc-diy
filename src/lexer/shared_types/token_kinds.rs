@@ -14,7 +14,7 @@ pub enum TokenKind {
     OpeningScope,
     ClosingScope,
     EndOfStatement,
-    Keyword,
+    Keyword(Keyword),
     Unknown,
 }
 
@@ -34,7 +34,7 @@ impl Display for TokenKind {
             TokenKind::OpeningScope => "[SCOPE, OPEN       ]",
             TokenKind::ClosingScope => "[SCOPE, CLOSE      ]",
             TokenKind::EndOfStatement => "[END OF STATEMENT  ]",
-            TokenKind::Keyword => "[KEYWORD           ]",
+            TokenKind::Keyword { .. } => "[KEYWORD           ]",
         };
         write!(f, "{str}")
     }
