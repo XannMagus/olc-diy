@@ -318,9 +318,7 @@ impl State for HexNumericLiteral {
 }
 
 fn single_character_handler(mut temporary_data: TemporaryData, balancer: fn(temporary_data: &mut TemporaryData) -> (), token_builder: fn() -> Token) -> Result<(Box<dyn State>, TemporaryData)> {
-    println!("BEFORE: {temporary_data:?}");
     balancer(&mut temporary_data);
-    println!("AFTER: {temporary_data:?}");
     temporary_data.chars.next();
     temporary_data.current_token = token_builder();
     Ok((Box::new(CompleteToken), temporary_data))

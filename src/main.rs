@@ -2,7 +2,6 @@ use std::io::{BufRead, stdin};
 
 use anyhow::Result;
 
-use crate::compiler::Compiler;
 use crate::lexer::{display_queue, Lexer};
 
 mod lexer;
@@ -41,9 +40,6 @@ fn main() {
 fn process(expr: &String) -> Result<()> {
     let token_queue = Lexer::new(expr.to_string()).parse()?;
     println!("{}", display_queue(&token_queue));
-
-    let expr = Compiler::new().to_expression(&token_queue)?;
-    println!("{}", expr.solve()?);
 
     Ok(())
 }
