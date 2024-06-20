@@ -560,7 +560,7 @@ pub const HEX_NUMERIC_DIGITS: [bool; 256] = make_lut("0123456789ABCDEFabcdef");
 pub const BINARY_NUMERIC_DIGITS: [bool; 256] = make_lut("01");
 pub const WHITESPACE: [bool; 256] = make_lut(" \t\n\r\x0C");
 pub const OPERATOR_CHARACTERS: [bool; 256] = make_lut("!$%^&*+-=#@?|`/\\<>~");
-pub const SYMBOL_CHARACTERS: [bool; 256] = make_lut("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789");
+pub const SYMBOL_CHARACTERS: [bool; 256] = make_lut("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789.");
 
 const fn make_lut(s: &str) -> [bool; 256] {
     let mut lookup_table = [false; 256];

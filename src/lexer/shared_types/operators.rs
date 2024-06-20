@@ -1,6 +1,6 @@
 use std::fmt::{Display, Formatter};
 
-use anyhow::anyhow;
+use anyhow::{anyhow, Result};
 
 use crate::lexer::shared_types::Token;
 use crate::lexer::shared_types::token_kinds::TokenKind;
@@ -83,7 +83,7 @@ impl Operator {
         }
     }
 
-    pub fn correct_arity(self, previous: &Option<Token>) -> anyhow::Result<Self> {
+    pub fn correct_arity(self, previous: &Option<Token>) -> Result<Self> {
         let unary = if let Some(previous) = previous {
             previous.kind != TokenKind::NumericLiteral && previous.kind != TokenKind::ClosingParenthesis
         } else {
@@ -138,7 +138,7 @@ impl Operator {
 }
 
 impl Operator {
-    pub fn from(str: &String) -> anyhow::Result<Self> {
+    pub fn from(str: &String) -> Result<Self> {
         match str.as_str() {
             "+" => Ok(Self::binary(OperatorKind::Sum, 2)),
             "-" => Ok(Self::binary(OperatorKind::Difference, 2)),
