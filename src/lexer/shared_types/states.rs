@@ -40,6 +40,8 @@ struct ScopeOpen;
 
 struct ScopeClose;
 
+struct Colon;
+
 struct Separator;
 
 struct EndOfStatement;
@@ -112,6 +114,8 @@ impl State for NewToken {
                 Ok((Box::new(ScopeClose), temporary_data))
             } else if ',' == c {
                 Ok((Box::new(Separator), temporary_data))
+            }else if ':' == c {
+                Ok((Box::new(Colon), temporary_data))
             } else if ';' == c {
                 Ok((Box::new(EndOfStatement), temporary_data))
             } else if '"' == c {
@@ -382,6 +386,16 @@ impl State for ScopeClose {
 impl State for Separator {
     fn handle<'a>(self: Box<Separator>, temporary_data: TemporaryData<'a>) -> Result<(Box<dyn State>, TemporaryData<'a>)> {
         single_character_handler(temporary_data, |_: &mut TemporaryData| {}, Token::separator)
+    }
+
+    fn is_final(&self) -> bool {
+        false
+    }
+}
+
+impl State for Colon {
+    fn handle<'a>(self: Box<Colon>, temporary_data: TemporaryData<'a>) -> Result<(Box<dyn State>, TemporaryData<'a>)> {
+        single_character_handler(temporary_data, |_: &mut TemporaryData| {}, Token::colon)
     }
 
     fn is_final(&self) -> bool {

@@ -75,6 +75,7 @@ impl Compiler {
                 TokenKind::ClosingScope |
                 TokenKind::Symbol |
                 TokenKind::Separator |
+                TokenKind::Colon |
                 TokenKind::StringLiteral |
                 TokenKind::EndOfStatement |
                 TokenKind::Keyword(_) => {

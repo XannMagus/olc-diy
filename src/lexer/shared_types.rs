@@ -138,6 +138,14 @@ impl Token {
         }
     }
 
+    fn colon() -> Self {
+        Self {
+            kind: TokenKind::Colon,
+            value: None,
+            id: ":".to_string(),
+        }
+    }
+
     fn end_of_statement() -> Self {
         Self {
             kind: TokenKind::EndOfStatement,
