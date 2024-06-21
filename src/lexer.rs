@@ -2,8 +2,8 @@ use std::collections::VecDeque;
 
 use anyhow::Result;
 
-pub use shared_types::{Token, TokenKind};
 use shared_types::states::{StartState, State, TemporaryData};
+pub use shared_types::Token;
 
 mod shared_types;
 
@@ -48,7 +48,7 @@ pub fn display_queue(queue: &TokenQueue) -> String {
             if !acc.is_empty() {
                 acc.push('\n');
             }
-            acc.push_str(&x.to_string());
+            acc.push_str(&format!("{x:?}"));
             acc
         },
     )

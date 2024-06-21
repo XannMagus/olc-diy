@@ -88,7 +88,7 @@ impl State for StartState {
 impl State for NewToken {
     fn handle<'a>(self: Box<NewToken>, mut temporary_data: TemporaryData<'a>) -> Result<(Box<dyn State>, TemporaryData<'a>)> {
         temporary_data.current_token_string.clear();
-        temporary_data.current_token = Token::new();
+        temporary_data.current_token = Token::Unknown;
         temporary_data.decimal_point_found = false;
 
         if let Some(&c) = temporary_data.chars.peek() {
@@ -177,12 +177,12 @@ impl State for NumericLiteral {
                 if SYMBOL_CHARACTERS[c as usize] {
                     Err(anyhow!("[PARSER] Invalid number/symbol"))
                 } else {
-                    temporary_data.current_token = Token::from_digits(&temporary_data.current_token_string);
+                    temporary_data.current_token = Token::NumericLiteral( temporary_data.current_token_string.parse::<f64>().unwrap() );
                     Ok((Box::new(CompleteToken), temporary_data))
                 }
             }
         } else {
-            temporary_data.current_token = Token::from_digits(&temporary_data.current_token_string);
+            temporary_data.current_token = Token::NumericLiteral( temporary_data.current_token_string.parse::<f64>().unwrap() );
             Ok((Box::new(CompleteToken), temporary_data))
         }
     }
@@ -201,7 +201,7 @@ impl State for StringLiteral {
                 Ok((Box::new(Self), temporary_data))
             } else {
                 temporary_data.chars.next();
-                temporary_data.current_token = Token::from_str(&temporary_data.current_token_string);
+                temporary_data.current_token = Token::StringLiteral(temporary_data.current_token_string.clone());
                 Ok((Box::new(CompleteToken), temporary_data))
             }
         } else {
@@ -223,14 +223,14 @@ impl State for SymbolName {
                 Ok((Box::new(Self), temporary_data))
             } else {
                 if let Some(keyword) = Keyword::new(&temporary_data.current_token_string) {
-                    temporary_data.current_token = Token::from_keyword(keyword);
+                    temporary_data.current_token = Token::Keyword(keyword);
                 } else {
-                    temporary_data.current_token = Token::symbol(&temporary_data.current_token_string);
+                    temporary_data.current_token = Token::Symbol(temporary_data.current_token_string.clone());
                 }
                 Ok((Box::new(CompleteToken), temporary_data))
             }
         } else {
-            temporary_data.current_token = Token::symbol(&temporary_data.current_token_string);
+            temporary_data.current_token = Token::Symbol(temporary_data.current_token_string.clone());
             Ok((Box::new(CompleteToken), temporary_data))
         }
     }
@@ -252,7 +252,7 @@ impl State for OperatorState {
                     Ok((Box::new(Self), temporary_data))
                 } else {
                     if let Ok(op) = Operator::from(&temporary_data.current_token_string) {
-                        temporary_data.current_token = Token::from_operator(op);
+                        temporary_data.current_token = Token::Operator(op);
                         Ok((Box::new(CompleteToken), temporary_data))
                     } else {
                         temporary_data.current_token_string.push(c);
@@ -262,7 +262,7 @@ impl State for OperatorState {
                 }
             } else {
                 if let Ok(op) = Operator::from(&temporary_data.current_token_string) {
-                    temporary_data.current_token = Token::from_operator(op);
+                    temporary_data.current_token = Token::Operator(op);
                     Ok((Box::new(CompleteToken), temporary_data))
                 } else {
                     Err(anyhow!("[PARSER] unrecognized operator: {}", temporary_data.current_token_string))
@@ -295,7 +295,7 @@ impl State for FancyNumericLiteral {
                 Err(anyhow!("[PARSER] Bad numeric literal"))
             }
         } else {
-            temporary_data.current_token = Token::from_digits(&temporary_data.current_token_string);
+            temporary_data.current_token = Token::NumericLiteral( temporary_data.current_token_string.parse::<f64>().unwrap() );
             Ok((Box::new(CompleteToken), temporary_data))
         }
     }
@@ -305,7 +305,11 @@ impl State for FancyNumericLiteral {
     }
 }
 
-fn fancy_numeric_handler<'a, S: State + 'static>(mut temporary_data: TemporaryData<'a>, digits: [bool; 256], state: S, kind: &str, token_builder: fn(&String) -> Token) -> Result<(Box<dyn State>, TemporaryData<'a>)> {
+fn fancy_numeric_handler<'a, S: State + 'static>(mut temporary_data: TemporaryData<'a>, digits: [bool; 256], state: S, kind: &str, radix: u32) -> Result<(Box<dyn State>, TemporaryData<'a>)> {
+    let value_extractor = |input: &String| {
+        let int_value = u64::from_str_radix(input.split_at(2).1, radix).unwrap_or(0);
+        int_value as f64
+    };
     if let Some(&c) = temporary_data.chars.peek() {
         if digits[c as usize] {
             temporary_data.current_token_string.push(c);
@@ -314,18 +318,18 @@ fn fancy_numeric_handler<'a, S: State + 'static>(mut temporary_data: TemporaryDa
         } else if SYMBOL_CHARACTERS[c as usize] || '.' == c {
             Err(anyhow!("[PARSER] Invalid {kind} number"))
         } else {
-            temporary_data.current_token = token_builder(&temporary_data.current_token_string);
+            temporary_data.current_token = Token::NumericLiteral(value_extractor(&temporary_data.current_token_string));
             Ok((Box::new(CompleteToken), temporary_data))
         }
     } else {
-        temporary_data.current_token = token_builder(&temporary_data.current_token_string);
+        temporary_data.current_token = Token::NumericLiteral(value_extractor(&temporary_data.current_token_string));
         Ok((Box::new(CompleteToken), temporary_data))
     }
 }
 
 impl State for BinaryNumericLiteral {
     fn handle<'a>(self: Box<BinaryNumericLiteral>, temporary_data: TemporaryData<'a>) -> Result<(Box<dyn State>, TemporaryData<'a>)> {
-        fancy_numeric_handler(temporary_data, BINARY_NUMERIC_DIGITS, Self, "binary", Token::from_bin)
+        fancy_numeric_handler(temporary_data, BINARY_NUMERIC_DIGITS, Self, "binary", 2)
     }
 
     fn is_final(&self) -> bool {
@@ -335,7 +339,7 @@ impl State for BinaryNumericLiteral {
 
 impl State for HexNumericLiteral {
     fn handle<'a>(self: Box<HexNumericLiteral>, temporary_data: TemporaryData<'a>) -> Result<(Box<dyn State>, TemporaryData<'a>)> {
-        fancy_numeric_handler(temporary_data, HEX_NUMERIC_DIGITS, Self, "hexadecimal", Token::from_hex)
+        fancy_numeric_handler(temporary_data, HEX_NUMERIC_DIGITS, Self, "hexadecimal", 16)
     }
 
     fn is_final(&self) -> bool {
@@ -343,16 +347,16 @@ impl State for HexNumericLiteral {
     }
 }
 
-fn single_character_handler(mut temporary_data: TemporaryData, balancer: fn(temporary_data: &mut TemporaryData) -> (), token_builder: fn() -> Token) -> Result<(Box<dyn State>, TemporaryData)> {
+fn single_character_handler(mut temporary_data: TemporaryData, balancer: fn(temporary_data: &mut TemporaryData) -> (), token: Token) -> Result<(Box<dyn State>, TemporaryData)> {
     balancer(&mut temporary_data);
     temporary_data.chars.next();
-    temporary_data.current_token = token_builder();
+    temporary_data.current_token = token;
     Ok((Box::new(CompleteToken), temporary_data))
 }
 
 impl State for ParenthesisOpen {
     fn handle<'a>(self: Box<ParenthesisOpen>, temporary_data: TemporaryData<'a>) -> Result<(Box<dyn State>, TemporaryData<'a>)> {
-        single_character_handler(temporary_data, |temp: &mut TemporaryData| { temp.paren_balance_check += 1; }, Token::open_parenthesis)
+        single_character_handler(temporary_data, |temp: &mut TemporaryData| { temp.paren_balance_check += 1; }, Token::OpeningParenthesis)
     }
 
     fn is_final(&self) -> bool {
@@ -363,7 +367,7 @@ impl State for ParenthesisOpen {
 impl State for ParenthesisClose {
 
     fn handle<'a>(self: Box<ParenthesisClose>, temporary_data: TemporaryData<'a>) -> Result<(Box<dyn State>, TemporaryData<'a>)> {
-        single_character_handler(temporary_data, |temp: &mut TemporaryData| { temp.paren_balance_check -= 1; }, Token::close_parenthesis)
+        single_character_handler(temporary_data, |temp: &mut TemporaryData| { temp.paren_balance_check -= 1; }, Token::ClosingParenthesis)
     }
 
     fn is_final(&self) -> bool {
@@ -374,7 +378,7 @@ impl State for ParenthesisClose {
 impl State for BracketOpen {
 
     fn handle<'a>(self: Box<BracketOpen>, temporary_data: TemporaryData<'a>) -> Result<(Box<dyn State>, TemporaryData<'a>)> {
-        single_character_handler(temporary_data, |temp: &mut TemporaryData| { temp.bracket_balance_check += 1; }, Token::open_bracket)
+        single_character_handler(temporary_data, |temp: &mut TemporaryData| { temp.bracket_balance_check += 1; }, Token::OpeningBracket)
     }
 
     fn is_final(&self) -> bool {
@@ -384,7 +388,7 @@ impl State for BracketOpen {
 
 impl State for BracketClose {
     fn handle<'a>(self: Box<BracketClose>, temporary_data: TemporaryData<'a>) -> Result<(Box<dyn State>, TemporaryData<'a>)> {
-        single_character_handler(temporary_data, |temp: &mut TemporaryData| { temp.bracket_balance_check -= 1; }, Token::close_bracket)
+        single_character_handler(temporary_data, |temp: &mut TemporaryData| { temp.bracket_balance_check -= 1; }, Token::ClosingBracket)
     }
 
     fn is_final(&self) -> bool {
@@ -395,7 +399,7 @@ impl State for BracketClose {
 impl State for ScopeOpen {
 
     fn handle<'a>(self: Box<ScopeOpen>, temporary_data: TemporaryData<'a>) -> Result<(Box<dyn State>, TemporaryData<'a>)> {
-        single_character_handler(temporary_data, |temp: &mut TemporaryData| { temp.scope_balance_check += 1; }, Token::open_scope)
+        single_character_handler(temporary_data, |temp: &mut TemporaryData| { temp.scope_balance_check += 1; }, Token::OpeningScope)
     }
 
     fn is_final(&self) -> bool {
@@ -405,7 +409,7 @@ impl State for ScopeOpen {
 
 impl State for ScopeClose {
     fn handle<'a>(self: Box<ScopeClose>, temporary_data: TemporaryData<'a>) -> Result<(Box<dyn State>, TemporaryData<'a>)> {
-            single_character_handler(temporary_data, |temp: &mut TemporaryData| { temp.scope_balance_check -= 1; }, Token::close_scope)
+            single_character_handler(temporary_data, |temp: &mut TemporaryData| { temp.scope_balance_check -= 1; }, Token::ClosingScope)
     }
 
     fn is_final(&self) -> bool {
@@ -415,7 +419,7 @@ impl State for ScopeClose {
 
 impl State for Separator {
     fn handle<'a>(self: Box<Separator>, temporary_data: TemporaryData<'a>) -> Result<(Box<dyn State>, TemporaryData<'a>)> {
-        single_character_handler(temporary_data, |_: &mut TemporaryData| {}, Token::separator)
+        single_character_handler(temporary_data, |_: &mut TemporaryData| {}, Token::Separator)
     }
 
     fn is_final(&self) -> bool {
@@ -425,7 +429,7 @@ impl State for Separator {
 
 impl State for Colon {
     fn handle<'a>(self: Box<Colon>, temporary_data: TemporaryData<'a>) -> Result<(Box<dyn State>, TemporaryData<'a>)> {
-        single_character_handler(temporary_data, |_: &mut TemporaryData| {}, Token::colon)
+        single_character_handler(temporary_data, |_: &mut TemporaryData| {}, Token::Colon)
     }
 
     fn is_final(&self) -> bool {
@@ -435,7 +439,7 @@ impl State for Colon {
 
 impl State for EndOfStatement {
     fn handle<'a>(self: Box<EndOfStatement>, temporary_data: TemporaryData<'a>) -> Result<(Box<dyn State>, TemporaryData<'a>)> {
-        single_character_handler(temporary_data, |_: &mut TemporaryData| {}, Token::end_of_statement)
+        single_character_handler(temporary_data, |_: &mut TemporaryData| {}, Token::EndOfStatement)
     }
 
     fn is_final(&self) -> bool {
@@ -541,7 +545,7 @@ impl<'a> TemporaryData<'a> {
             chars,
             output: TokenQueue::new(),
             current_token_string: String::new(),
-            current_token: Token::new(),
+            current_token: Token::Unknown,
             decimal_point_found: false,
             paren_balance_check: 0,
             scope_balance_check: 0,

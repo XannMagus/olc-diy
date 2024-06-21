@@ -2,8 +2,7 @@ use std::fmt::{Display, Formatter};
 
 use anyhow::{anyhow, Result};
 
-use crate::lexer::shared_types::Token;
-use crate::lexer::shared_types::token_kinds::TokenKind;
+use crate::lexer::shared_types::token::Token;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct Operator {
@@ -95,7 +94,11 @@ impl Operator {
 
     pub fn correct_arity(self, previous: &Option<Token>) -> Result<Self> {
         let unary = if let Some(previous) = previous {
-            previous.kind != TokenKind::NumericLiteral && previous.kind != TokenKind::ClosingParenthesis
+            match previous {
+                Token::NumericLiteral(_) |
+                Token::ClosingParenthesis => false,
+                _ => true
+            }
         } else {
             true
         };
