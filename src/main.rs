@@ -49,7 +49,7 @@ fn main() {
 }
 
 fn process(expr: &String) -> Result<()> {
-    let token_queue = Lexer::new(expr.to_string()).parse()?;
+    let token_queue = Lexer::new(expr.to_string()).tokenize()?;
     println!("{}", display_queue(&token_queue));
 
     Ok(())

@@ -20,7 +20,7 @@ impl Lexer {
         }
     }
 
-    pub fn parse(self) -> Result<TokenQueue> {
+    pub fn tokenize(self) -> Result<TokenQueue> {
         let cloned = self.input.clone();
         let iter = cloned.chars().peekable();
         let mut tmp = TemporaryData::new(self.input.clone(), iter);
