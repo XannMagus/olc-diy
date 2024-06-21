@@ -47,6 +47,7 @@ struct ScopeClose;
 struct Colon;
 
 struct Separator;
+struct ScopeSeparator;
 
 struct EndOfStatement;
 
@@ -123,7 +124,9 @@ impl State for NewToken {
                 Ok((Box::new(ScopeClose), temporary_data))
             } else if ',' == c {
                 Ok((Box::new(Separator), temporary_data))
-            }else if ':' == c {
+            } else if '.' == c {
+                Ok((Box::new(ScopeSeparator), temporary_data))
+            } else if ':' == c {
                 Ok((Box::new(Colon), temporary_data))
             } else if ';' == c {
                 Ok((Box::new(EndOfStatement), temporary_data))
@@ -427,6 +430,16 @@ impl State for Separator {
     }
 }
 
+impl State for ScopeSeparator {
+    fn handle<'a>(self: Box<ScopeSeparator>, temporary_data: TemporaryData<'a>) -> Result<(Box<dyn State>, TemporaryData<'a>)> {
+        single_character_handler(temporary_data, |_: &mut TemporaryData| {}, Token::ScopeSeparator)
+    }
+
+    fn is_final(&self) -> bool {
+        false
+    }
+}
+
 impl State for Colon {
     fn handle<'a>(self: Box<Colon>, temporary_data: TemporaryData<'a>) -> Result<(Box<dyn State>, TemporaryData<'a>)> {
         single_character_handler(temporary_data, |_: &mut TemporaryData| {}, Token::Colon)
@@ -564,7 +577,7 @@ pub const HEX_NUMERIC_DIGITS: [bool; 256] = make_lut("0123456789ABCDEFabcdef");
 pub const BINARY_NUMERIC_DIGITS: [bool; 256] = make_lut("01");
 pub const WHITESPACE: [bool; 256] = make_lut(" \t\n\r\x0C");
 pub const OPERATOR_CHARACTERS: [bool; 256] = make_lut("!$%^&*+-=#@?|`/\\<>~");
-pub const SYMBOL_CHARACTERS: [bool; 256] = make_lut("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789.");
+pub const SYMBOL_CHARACTERS: [bool; 256] = make_lut("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789");
 
 const fn make_lut(s: &str) -> [bool; 256] {
     let mut lookup_table = [false; 256];

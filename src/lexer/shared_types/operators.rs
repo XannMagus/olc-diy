@@ -39,6 +39,8 @@ enum OperatorKind {
     MinusEqual,
     TimesEqual,
     DivideEqual,
+    //Range
+    Range,
 }
 
 impl Operator {
@@ -172,8 +174,9 @@ impl Operator {
             "-=" => Ok(Self::binary(OperatorKind::MinusEqual, 0)),
             "*=" => Ok(Self::binary(OperatorKind::TimesEqual, 0)),
             "/=" => Ok(Self::binary(OperatorKind::DivideEqual, 0)),
-            "++" => Ok(Self::unary(OperatorKind::Increment, 5)),
-            "--" => Ok(Self::unary(OperatorKind::Decrement, 5)),
+            "++" => Ok(Self::unary(OperatorKind::Increment, 6)),
+            "--" => Ok(Self::unary(OperatorKind::Decrement, 6)),
+            ".." => Ok(Self::binary(OperatorKind::Range,5)),
             str => Err(anyhow!("Unknown Operator {str}"))
         }
     }
@@ -219,6 +222,7 @@ impl Display for OperatorKind {
             OperatorKind::MinusEqual => "-=",
             OperatorKind::TimesEqual => "*=",
             OperatorKind::DivideEqual => "/=",
+            OperatorKind::Range => "..",
         };
         write!(f, "{representation}")
     }
