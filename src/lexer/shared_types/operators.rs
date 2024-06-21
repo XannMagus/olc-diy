@@ -22,6 +22,8 @@ enum OperatorKind {
     Sum,
     Negate,
     Positive,
+    Increment,
+    Decrement,
     // Logical
     LogicalOr,
     LogicalAnd,
@@ -32,6 +34,12 @@ enum OperatorKind {
     GreaterThanEqual,
     LessThan,
     LessThanEqual,
+    //Assignment
+    Assignment,
+    PlusEqual,
+    MinusEqual,
+    TimesEqual,
+    DivideEqual,
 }
 
 impl Operator {
@@ -72,6 +80,8 @@ impl Operator {
         match self.kind {
             OperatorKind::Negate => -operand,
             OperatorKind::Positive => operand,
+            OperatorKind::Increment => operand+1.0,
+            OperatorKind::Decrement => operand-1.0,
             _ => 0.0,
         }
     }
@@ -154,6 +164,13 @@ impl Operator {
             ">=" => Ok(Self::binary(OperatorKind::GreaterThanEqual, 1)),
             "<" => Ok(Self::binary(OperatorKind::LessThan, 1)),
             "<=" => Ok(Self::binary(OperatorKind::LessThanEqual, 1)),
+            "=" => Ok(Self::binary(OperatorKind::Assignment, 0)),
+            "+=" => Ok(Self::binary(OperatorKind::PlusEqual, 0)),
+            "-=" => Ok(Self::binary(OperatorKind::MinusEqual, 0)),
+            "*=" => Ok(Self::binary(OperatorKind::TimesEqual, 0)),
+            "/=" => Ok(Self::binary(OperatorKind::DivideEqual, 0)),
+            "++" => Ok(Self::unary(OperatorKind::Increment, 5)),
+            "--" => Ok(Self::unary(OperatorKind::Decrement, 5)),
             str => Err(anyhow!("Unknown Operator {str}"))
         }
     }
@@ -192,6 +209,13 @@ impl Display for OperatorKind {
             OperatorKind::GreaterThanEqual => ">=",
             OperatorKind::LessThan => "<",
             OperatorKind::LessThanEqual => "<=",
+            OperatorKind::Increment => "++",
+            OperatorKind::Decrement => "--",
+            OperatorKind::Assignment => "=",
+            OperatorKind::PlusEqual => "+=",
+            OperatorKind::MinusEqual => "-=",
+            OperatorKind::TimesEqual => "*=",
+            OperatorKind::DivideEqual => "/=",
         };
         write!(f, "{representation}")
     }
