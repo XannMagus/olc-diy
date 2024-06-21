@@ -28,24 +28,24 @@ pub enum Token {
 impl Debug for Token {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let str = match self {
-            Token::NumericLiteral(value) => format!("[LITERAL, NUMERIC  ] {value}"),
-            Token::StringLiteral(value) => format!("[LITERAL, STRING   ] {value}"),
-            Token::Symbol(name) => format!("[SYMBOL            ] {name}"),
-            Token::Operator(op) => format!("[OPERATOR          ] {op}"),
-            Token::Separator => "[SEPARATOR, GENERAL] ,".to_string(),
-            Token::ScopeSeparator => "[SEPARATOR, SCOPE  ] .".to_string(),
-            Token::Colon => "[COLON             ] :".to_string(),
-            Token::OpeningParenthesis => "[PARENTHESIS, OPEN ] (".to_string(),
-            Token::ClosingParenthesis => "[PARENTHESIS, CLOSE] )".to_string(),
-            Token::OpeningBracket => "[BRACKET, OPEN     ] [".to_string(),
-            Token::ClosingBracket => "[BRACKET, CLOSE    ] ]".to_string(),
-            Token::Unknown => "[UNKNOWN           ]".to_string(),
-            Token::OpeningScope => "[SCOPE, OPEN       ] {".to_string(),
-            Token::ClosingScope => "[SCOPE, CLOSE      ] }".to_string(),
-            Token::EndOfStatement => "[END OF STATEMENT  ] ;".to_string(),
-            Token::Keyword(keyword) => format!("[KEYWORD           ] {keyword}"),
+            Token::NumericLiteral(_) => "[LITERAL, NUMERIC  ]",
+            Token::StringLiteral(_) => "[LITERAL, STRING   ]",
+            Token::Symbol(_) => "[SYMBOL            ]",
+            Token::Operator(_) => "[OPERATOR          ]",
+            Token::Separator => "[SEPARATOR, GENERAL]",
+            Token::ScopeSeparator => "[SEPARATOR, SCOPE  ]",
+            Token::Colon => "[COLON             ]",
+            Token::OpeningParenthesis => "[PARENTHESIS, OPEN ]",
+            Token::ClosingParenthesis => "[PARENTHESIS, CLOSE]",
+            Token::OpeningBracket => "[BRACKET, OPEN     ]",
+            Token::ClosingBracket => "[BRACKET, CLOSE    ]",
+            Token::Unknown => "[UNKNOWN           ]",
+            Token::OpeningScope => "[SCOPE, OPEN       ]",
+            Token::ClosingScope => "[SCOPE, CLOSE      ]",
+            Token::EndOfStatement => "[END OF STATEMENT  ]",
+            Token::Keyword(_) => "[KEYWORD           ]",
         };
-        write!(f, "{str}")
+        write!(f, "{str} {self}")
     }
 }
 
