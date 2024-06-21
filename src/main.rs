@@ -1,4 +1,6 @@
+use std::fs;
 use std::io::{BufRead, stdin};
+use std::path::PathBuf;
 
 use anyhow::Result;
 
@@ -11,6 +13,11 @@ mod compiler;
 fn main() {
     let mut handle = stdin().lock();
     let mut input = String::new();
+    let path = {
+        let mut path_buf = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        path_buf.push("examples/00.lang");
+        path_buf
+    };
 
     loop {
         println!("Solve ('quit' or 'exit' to exit):");
@@ -25,6 +32,10 @@ fn main() {
         if input.eq_ignore_ascii_case("quit") || input.eq_ignore_ascii_case("exit") {
             println!("Exiting...");
             break;
+        }
+
+        if input.eq_ignore_ascii_case("file") {
+            input = fs::read_to_string(&path).unwrap_or("".to_string());
         }
 
         let result = process(&input);
