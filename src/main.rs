@@ -7,8 +7,6 @@ use anyhow::Result;
 use crate::lexer::{display_queue, Lexer};
 
 mod lexer;
-mod solver;
-mod compiler;
 
 fn main() {
     let mut handle = stdin().lock();
