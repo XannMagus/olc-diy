@@ -61,6 +61,16 @@ impl From<Token> for BindingPower {
     }
 }
 
+impl From<&Token> for BindingPower {
+    fn from(value: &Token) -> Self {
+        match value {
+            Token::NumericLiteral(_) | Token::StringLiteral(_) | Token::Symbol(_) => Self::Primary,
+            Token::Operator(op) => (*op).into(),
+            _ => Self::Default,
+        }
+    }
+}
+
 impl From<Option<Token>> for BindingPower {
     fn from(value: Option<Token>) -> Self {
         match value {
