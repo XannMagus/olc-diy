@@ -1,19 +1,27 @@
 use std::fs;
-use std::io::{BufRead, stdin};
+use std::io::{stdin, BufRead};
 use std::path::PathBuf;
 
 use anyhow::Result;
+use debug_print::debug_println;
 
-use crate::lexer::{display_queue, Lexer};
+use crate::lexer::Lexer;
+use crate::parser::Parser;
 
 mod lexer;
+mod parser;
 
 fn main() {
     let mut handle = stdin().lock();
     let mut input = String::new();
-    let path = {
+    let path_1 = {
         let mut path_buf = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         path_buf.push("examples/00.lang");
+        path_buf
+    };
+    let path_2 = {
+        let mut path_buf = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        path_buf.push("examples/01.lang");
         path_buf
     };
 
@@ -33,7 +41,11 @@ fn main() {
         }
 
         if input.eq_ignore_ascii_case("file") {
-            input = fs::read_to_string(&path).unwrap_or("".to_string());
+            input = fs::read_to_string(&path_1).unwrap_or("".to_string());
+        }
+
+        if input.eq_ignore_ascii_case("file1") {
+            input = fs::read_to_string(&path_2).unwrap_or("".to_string());
         }
 
         let result = process(&input);
@@ -49,8 +61,9 @@ fn main() {
 }
 
 fn process(expr: &String) -> Result<()> {
-    let token_queue = Lexer::new(expr.to_string()).tokenize()?;
-    println!("{}", display_queue(&token_queue));
+    let mut parser = Parser::new(Lexer::new(expr.to_string()).tokenize()?);
+    let ast = parser.parse()?;
+    debug_println!("{ast}");
 
     Ok(())
 }

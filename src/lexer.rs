@@ -3,6 +3,8 @@ use std::collections::VecDeque;
 use anyhow::Result;
 
 use shared_types::states::{StartState, State, TemporaryData};
+pub use shared_types::Keyword;
+pub use shared_types::OperatorKind;
 pub use shared_types::Token;
 
 mod shared_types;
@@ -15,15 +17,11 @@ pub type TokenQueue = VecDeque<Token>;
 
 impl Lexer {
     pub fn new(input: String) -> Self {
-        Self {
-            input,
-        }
+        Self { input }
     }
 
     pub fn tokenize(self) -> Result<TokenQueue> {
-        let cloned = self.input.clone();
-        let iter = cloned.chars().peekable();
-        let mut tmp = TemporaryData::new(self.input.clone(), iter);
+        let mut tmp = TemporaryData::new(self.input.chars().peekable());
         let mut state: Box<dyn State> = Box::new(StartState);
 
         loop {
@@ -36,20 +34,4 @@ impl Lexer {
 
         Ok(tmp.output())
     }
-}
-
-
-// Utilities
-
-pub fn display_queue(queue: &TokenQueue) -> String {
-    queue.iter().fold(
-        String::new(),
-        |mut acc, x| {
-            if !acc.is_empty() {
-                acc.push('\n');
-            }
-            acc.push_str(&format!("{x:?}"));
-            acc
-        },
-    )
 }

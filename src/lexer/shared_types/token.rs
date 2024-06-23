@@ -1,14 +1,14 @@
 use std::fmt::{Debug, Display, Formatter};
-use crate::lexer::shared_types::keywords::Keyword;
-use crate::lexer::shared_types::operators::Operator;
 
+use crate::lexer::shared_types::keywords::Keyword;
+use crate::lexer::shared_types::operators::OperatorKind;
 
 #[derive(PartialEq, Clone)]
 pub enum Token {
     NumericLiteral(f64),
     StringLiteral(String),
     Symbol(String),
-    Operator(Operator),
+    Operator(OperatorKind),
     Colon,
     Separator,
     ScopeSeparator,
@@ -20,9 +20,38 @@ pub enum Token {
     ClosingBracket,
     EndOfStatement,
     Keyword(Keyword),
+    EndOfFile,
     Unknown,
 }
 
+impl Token {
+    pub fn is_eof(&self) -> bool {
+        *self == Self::EndOfFile
+    }
+
+    pub fn match_variant(&self, expected: &Token) -> bool {
+        match (self, expected) {
+            (Token::NumericLiteral(_), Token::NumericLiteral(_))
+            | (Token::StringLiteral(_), Token::StringLiteral(_))
+            | (Token::Symbol(_), Token::Symbol(_))
+            | (Token::Colon, Token::Colon)
+            | (Token::Separator, Token::Separator)
+            | (Token::ScopeSeparator, Token::ScopeSeparator)
+            | (Token::OpeningParenthesis, Token::OpeningParenthesis)
+            | (Token::ClosingParenthesis, Token::ClosingParenthesis)
+            | (Token::OpeningScope, Token::OpeningScope)
+            | (Token::ClosingScope, Token::ClosingScope)
+            | (Token::OpeningBracket, Token::OpeningBracket)
+            | (Token::ClosingBracket, Token::ClosingBracket)
+            | (Token::EndOfStatement, Token::EndOfStatement)
+            | (Token::EndOfFile, Token::EndOfFile)
+            | (Token::Unknown, Token::Unknown) => true,
+            (Token::Operator(op1), Token::Operator(op2)) => op1 == op2,
+            (Token::Keyword(kw1), Token::Keyword(kw2)) => kw1 == kw2,
+            _ => false,
+        }
+    }
+}
 
 // Display Implementation
 impl Debug for Token {
@@ -44,6 +73,7 @@ impl Debug for Token {
             Token::ClosingScope => "[SCOPE, CLOSE      ]",
             Token::EndOfStatement => "[END OF STATEMENT  ]",
             Token::Keyword(_) => "[KEYWORD           ]",
+            Token::EndOfFile => "[END OF FILE       ]",
         };
         write!(f, "{str} {self}")
     }
@@ -68,6 +98,7 @@ impl Display for Token {
             Token::EndOfStatement => ';'.to_string(),
             Token::Keyword(keyword) => format!("{keyword}"),
             Token::Unknown => '?'.to_string(),
+            Token::EndOfFile => "EOF".to_string(),
         };
         write!(f, "{str}")
     }

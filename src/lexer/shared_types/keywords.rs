@@ -43,7 +43,7 @@ impl Keyword {
             "export" => Some(Self::Export),
             "typeof" => Some(Self::Typeof),
             "in" => Some(Self::In),
-            &_ => None
+            &_ => None,
         }
     }
 }
