@@ -6,7 +6,7 @@ use anyhow::Result;
 use debug_print::debug_println;
 
 use crate::lexer::Lexer;
-use crate::parser::Parser;
+use crate::parser::{Displayable, Parser};
 
 mod lexer;
 mod parser;
@@ -63,7 +63,7 @@ fn main() {
 fn process(expr: &String) -> Result<()> {
     let mut parser = Parser::new(Lexer::new(expr.to_string()).tokenize()?);
     let ast = parser.parse()?;
-    debug_println!("{ast}");
+    debug_println!("{}", Displayable(ast));
 
     Ok(())
 }

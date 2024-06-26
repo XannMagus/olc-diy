@@ -1,5 +1,5 @@
-use anyhow::{anyhow, Result};
-use crate::lexer::Token;
+use anyhow::{anyhow, bail, Result};
+use crate::lexer::{OperatorKind, Token};
 use crate::parser::ast::Expr;
 use crate::parser::binding_power::BindingPower;
 use crate::parser::Parser;
@@ -40,16 +40,14 @@ impl Parser {
     }
 
     pub(super) fn parse_binary_expression(&mut self, left: Expr, bp: BindingPower) -> Result<Expr> {
-        let operator = self
-            .advance()
-            .ok_or(anyhow!("[PARSER] Missing operator token"))?;
+        let operator = self.get_op()?;
         let right = self.parse_expression(bp)?;
 
         Ok(Expr::binary(left, operator, right))
     }
 
     pub(super) fn parse_assignment_expression(&mut self, left: Expr, bp: BindingPower) -> Result<Expr> {
-        let operator = self.advance().ok_or(anyhow!("[PARSER] Should be unreachable"))?;
+        let operator = self.get_op()?;
         let right = self.parse_expression(bp)?;
 
         Ok(Expr::assignment(left, operator, right))
@@ -73,7 +71,7 @@ impl Parser {
     }
 
     pub(super) fn parse_prefix_expression(&mut self) -> Result<Expr> {
-        let operator = self.advance().ok_or(anyhow!("[PARSER] Should be unreachable"))?;
+        let operator = self.get_op()?;
         let right = self.parse_expression(BindingPower::Default)?;
 
         Ok(Expr::prefix(operator, right))
@@ -84,5 +82,15 @@ impl Parser {
         let expr = self.parse_expression(BindingPower::Default);
         self.expect(&Token::ClosingParenthesis)?;
         expr
+    }
+}
+
+impl Parser {
+    fn get_op(&mut self) -> Result<OperatorKind> {
+        if let Token::Operator(op) = self.advance().ok_or(anyhow!("[PARSER] Should be unreachable"))? {
+            Ok(op)
+        } else {
+            bail!("[PARSER] Expected an Operator Token")
+        }
     }
 }

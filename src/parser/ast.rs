@@ -1,8 +1,9 @@
-use std::fmt::{Display, Formatter};
+use std::fmt::Display;
 
 use pretty::{BoxAllocator, DocAllocator, DocBuilder};
 
-use crate::lexer::Token;
+use crate::lexer::OperatorKind;
+use crate::parser::utilities::ToDoc;
 
 #[derive(Debug)]
 pub enum Expr {
@@ -11,18 +12,18 @@ pub enum Expr {
     Symbol(String),
     Binary {
         left: Box<Expr>,
-        operator: Token,
+        operator: OperatorKind,
         right: Box<Expr>,
     },
     Prefix {
-        operator: Token,
+        operator: OperatorKind,
         right: Box<Expr>,
     },
     Assignment {
         assignee: Box<Expr>,
-        operator: Token,
+        operator: OperatorKind,
         value: Box<Expr>,
-    }
+    },
 }
 
 #[derive(Debug)]
@@ -37,7 +38,7 @@ pub enum Stmt {
 }
 
 impl Expr {
-    pub fn binary(left: Expr, operator: Token, right: Expr) -> Self {
+    pub fn binary(left: Expr, operator: OperatorKind, right: Expr) -> Self {
         Self::Binary {
             left: Box::new(left),
             operator,
@@ -45,7 +46,7 @@ impl Expr {
         }
     }
 
-    pub fn assignment(assignee: Expr, operator: Token, value: Expr) -> Self {
+    pub fn assignment(assignee: Expr, operator: OperatorKind, value: Expr) -> Self {
         Self::Assignment {
             assignee: Box::new(assignee),
             operator,
@@ -53,7 +54,7 @@ impl Expr {
         }
     }
 
-    pub fn prefix(operator: Token, right: Expr) -> Self {
+    pub fn prefix(operator: OperatorKind, right: Expr) -> Self {
         Self::Prefix { operator, right: Box::new(right) }
     }
 }
@@ -68,7 +69,7 @@ impl Stmt {
     }
 }
 
-impl Expr {
+impl ToDoc for Expr {
     fn to_doc<'a>(&self, allocator: &'a BoxAllocator) -> DocBuilder<'a, BoxAllocator> {
         match self {
             Expr::Number(n) => allocator.text(n.to_string()),
@@ -115,15 +116,7 @@ impl Expr {
     }
 }
 
-impl Display for Expr {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let allocator = BoxAllocator;
-        let str = self.to_doc(&allocator).pretty(80).to_string();
-        write!(f, "{str}")
-    }
-}
-
-impl Stmt {
+impl ToDoc for Stmt {
     fn to_doc<'a>(&self, allocator: &'a BoxAllocator) -> DocBuilder<'a, BoxAllocator> {
         match self {
             Stmt::Block(stmts) => {
@@ -162,13 +155,5 @@ impl Stmt {
                 ])
             }
         }
-    }
-}
-
-impl Display for Stmt {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let allocator = BoxAllocator;
-        let str = self.to_doc(&allocator).pretty(80).to_string();
-        write!(f, "{str}")
     }
 }
