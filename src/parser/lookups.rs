@@ -1,10 +1,17 @@
+use anyhow::Result;
 use crate::lexer::{Keyword, OperatorKind, Token};
-use crate::parser::ast::{Expr, Stmt};
+use crate::parser::ast::{Expr, Stmt, Type};
 use crate::parser::binding_power::BindingPower;
 use crate::parser::Parser;
 
+type NudHandler = fn(&mut Parser) -> Result<Expr>;
+type LedHandler = fn(&mut Parser, Expr, BindingPower) -> Result<Expr>;
+type StmtHandler = fn(&mut Parser) -> Result<Stmt>;
+type TypeNudHandler = fn(&mut Parser) -> Result<Type>;
+type TypeLedHandler = fn(&mut Parser, Type, BindingPower) -> Result<Type>;
+
 impl Parser {
-    pub(super) fn nud(token: &Token) -> Option<fn(&mut Self) -> anyhow::Result<Expr>> {
+    pub(super) fn nud(token: &Token) -> Option<NudHandler> {
         match token {
             Token::NumericLiteral(_)
             | Token::StringLiteral(_)
@@ -16,7 +23,7 @@ impl Parser {
         }
     }
 
-    pub(super) fn led(token: &Token) -> Option<fn(&mut Self, Expr, BindingPower) -> anyhow::Result<Expr>> {
+    pub(super) fn led(token: &Token) -> Option<LedHandler> {
         match token {
             Token::Operator(operator) => match operator {
                 OperatorKind::LogicalOr
@@ -45,7 +52,7 @@ impl Parser {
         }
     }
 
-    pub(super) fn stmt(token: &Token) -> Option<fn(&mut Self) -> anyhow::Result<Stmt>> {
+    pub(super) fn stmt(token: &Token) -> Option<StmtHandler> {
         match token {
             Token::Keyword(keyword) => match keyword {
                 Keyword::Const | Keyword::Let => Some(Self::parse_variable_declaration_stmt),
@@ -55,4 +62,15 @@ impl Parser {
         }
     }
 
+    pub(super) fn type_nud(token: &Token) -> Option<TypeNudHandler> {
+        match token {
+            Token::Symbol(_) => Some(Self::parse_symbol_type),
+            Token::OpeningBracket => Some(Self::parse_array_type),
+            _ => None,
+        }
+    }
+
+    pub(super) fn type_led(_token: &Token) -> Option<TypeLedHandler> {
+        None
+    }
 }

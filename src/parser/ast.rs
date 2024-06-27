@@ -33,8 +33,15 @@ pub enum Stmt {
     VariableDeclaration {
         identifier: String,
         constant: bool,
-        assigned_value: Expr,
+        assigned_value: Option<Expr>,
+        explicit_type: Option<Type>,
     },
+}
+
+#[derive(Debug)]
+pub enum Type {
+    Symbol(String),
+    Array(Box<Type>),
 }
 
 impl Expr {
@@ -55,16 +62,25 @@ impl Expr {
     }
 
     pub fn prefix(operator: OperatorKind, right: Expr) -> Self {
-        Self::Prefix { operator, right: Box::new(right) }
+        Self::Prefix {
+            operator,
+            right: Box::new(right),
+        }
     }
 }
 
 impl Stmt {
-    pub fn variable_declaration(identifier: String, constant: bool, assigned_value: Expr) -> Self {
+    pub fn variable_declaration(
+        identifier: String,
+        constant: bool,
+        assigned_value: Option<Expr>,
+        explicit_type: Option<Type>,
+    ) -> Self {
         Self::VariableDeclaration {
             identifier,
             constant,
             assigned_value,
+            explicit_type,
         }
     }
 }
@@ -135,8 +151,9 @@ impl ToDoc for Stmt {
                 identifier,
                 constant,
                 assigned_value,
+                explicit_type,
             } => {
-                allocator.concat([
+                let mut docs = vec![
                     allocator
                         .text("Variable Declaration")
                         .append(allocator.line()),
@@ -150,10 +167,39 @@ impl ToDoc for Stmt {
                         .text(constant.to_string())
                         .nest(2)
                         .append(allocator.line()),
-                    allocator.text("Value: ").nest(2),
-                    assigned_value.to_doc(&allocator).nest(2).append(allocator.line()),
-                ])
+                ];
+                docs.push(allocator.text("Value: ").nest(2));
+                docs.push(
+                    if let Some(assigned_value) = assigned_value {
+                        assigned_value.to_doc(&allocator)
+                    } else {
+                        allocator.text("None")
+                    }
+                        .nest(2)
+                        .append(allocator.line()),
+                );
+                docs.push(allocator.text("Type: ").nest(2));
+                docs.push(
+                    if let Some(explicit_type) = explicit_type {
+                        explicit_type.to_doc(&allocator)
+                    } else {
+                        allocator.text("None")
+                    }
+                        .nest(2)
+                        .append(allocator.line()),
+                );
+
+                allocator.concat(docs)
             }
+        }
+    }
+}
+
+impl ToDoc for Type {
+    fn to_doc<'a>(&self, allocator: &'a BoxAllocator) -> DocBuilder<'a, BoxAllocator> {
+        match self {
+            Type::Symbol(name) => allocator.text(name.clone()),
+            Type::Array(subtype) => allocator.text("Array<").append(subtype.to_doc(&allocator).nest(2)).append(allocator.text(">")),
         }
     }
 }

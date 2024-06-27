@@ -16,6 +16,15 @@ pub enum BindingPower {
     Primary,
 }
 
+#[derive(PartialOrd, PartialEq, Debug)]
+pub struct TypeBindingPower(BindingPower);
+
+impl BindingPower {
+    pub(super) fn to_type(&self) -> TypeBindingPower {
+        TypeBindingPower(self.clone())
+    }
+}
+
 impl From<OperatorKind> for BindingPower {
     fn from(value: OperatorKind) -> Self {
         match value {
@@ -77,5 +86,23 @@ impl From<Option<Token>> for BindingPower {
             None => Self::Default,
             Some(token) => token.into(),
         }
+    }
+}
+
+impl From<Token> for TypeBindingPower {
+    fn from(_value: Token) -> Self {
+        BindingPower::Default.to_type()
+    }
+}
+
+impl From<&Token> for TypeBindingPower {
+    fn from(_value: &Token) -> Self {
+        BindingPower::Default.to_type()
+    }
+}
+
+impl From<Option<Token>> for TypeBindingPower {
+    fn from(_value: Option<Token>) -> Self {
+        BindingPower::Default.to_type()
     }
 }

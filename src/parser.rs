@@ -12,6 +12,7 @@ mod lookups;
 mod stmt;
 mod error_handling;
 mod utilities;
+mod types;
 
 pub struct Parser {
     tokens: TokenQueue,

@@ -1,4 +1,5 @@
 let foo = 45.2;
 let bar = foo * 10;
 
-const isGreater = foo > 10;
+const isGreater: bool = foo > 10;
+let fushia: [][][]int;
