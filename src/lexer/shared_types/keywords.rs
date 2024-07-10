@@ -20,6 +20,8 @@ pub enum Keyword {
     Export,
     Typeof,
     In,
+    Struct,
+    Static,
 }
 
 impl Keyword {
@@ -43,6 +45,8 @@ impl Keyword {
             "export" => Some(Self::Export),
             "typeof" => Some(Self::Typeof),
             "in" => Some(Self::In),
+            "struct" => Some(Self::Struct),
+            "static" => Some(Self::Static),
             &_ => None,
         }
     }

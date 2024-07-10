@@ -1,6 +1,9 @@
 use crate::lexer::OperatorKind;
 
+pub use structs::StructFieldInfo;
+
 mod display;
+mod structs;
 
 #[derive(Debug)]
 pub enum Expr {
@@ -33,6 +36,10 @@ pub enum Stmt {
         assigned_value: Option<Expr>,
         explicit_type: Option<Type>,
     },
+    StructDeclaration {
+        identifier: String,
+        fields: Vec<StructFieldInfo>,
+    }
 }
 
 #[derive(Debug)]

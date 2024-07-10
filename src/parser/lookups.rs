@@ -15,8 +15,7 @@ impl Parser {
         match token {
             Token::NumericLiteral(_)
             | Token::StringLiteral(_)
-            | Token::Symbol(_)
-            | Token::Keyword(_) => Some(Self::parse_primary_expr),
+            | Token::Symbol(_) => Some(Self::parse_primary_expr),
             Token::Operator(OperatorKind::Difference) => Some(Self::parse_prefix_expression),
             Token::OpeningParenthesis => Some(Self::parse_grouping_expression),
             _ => None,
@@ -56,6 +55,7 @@ impl Parser {
         match token {
             Token::Keyword(keyword) => match keyword {
                 Keyword::Const | Keyword::Let => Some(Self::parse_variable_declaration_stmt),
+                Keyword::Struct => Some(Self::parse_struct_definition_stmt),
                 _ => None,
             },
             _ => None,

@@ -18,7 +18,7 @@ impl Parser {
     }
 
     pub(super) fn parse_array_type(&mut self) -> Result<Type> {
-        self.advance();
+        self.expect(&Token::OpeningBracket)?;
         self.expect(&Token::ClosingBracket)?;
 
         let underlying = self.parse_type(BindingPower::Default.to_type())?;

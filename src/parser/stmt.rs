@@ -1,12 +1,13 @@
-use anyhow::{anyhow, bail};
+use anyhow::{anyhow, bail, Result};
+
 use crate::lexer::{Keyword, OperatorKind, Token};
-use crate::parser::ast::Stmt;
+use crate::parser::ast::{Stmt, StructFieldInfo};
 use crate::parser::binding_power::BindingPower;
 use crate::parser::Parser;
+use crate::parser::utilities::UniqueKeyHashMap;
 
 impl Parser {
-
-    pub(super) fn parse_statement(&mut self) -> anyhow::Result<Stmt> {
+    pub(super) fn parse_statement(&mut self) -> Result<Stmt> {
         if let Some(token) = &self.current {
             if let Some(handler) = Self::stmt(token) {
                 handler(self)
@@ -23,7 +24,7 @@ impl Parser {
         }
     }
 
-    pub(super) fn parse_variable_declaration_stmt(&mut self) -> anyhow::Result<Stmt> {
+    pub(super) fn parse_variable_declaration_stmt(&mut self) -> Result<Stmt> {
         if let Some(token) = &self.advance() {
             let is_constant = match token {
                 Token::Keyword(keyword) => match keyword {
@@ -33,15 +34,11 @@ impl Parser {
                 },
                 _ => bail!("[PARSER] Can't be reached"),
             };
-            let var_name = if let Some(token) = self.expect_error(
+            let var_name = if let Some(Token::Symbol(name)) = self.expect_error(
                 &Token::Symbol("whatevs".to_string()),
                 Some(anyhow!("[PARSER] Expected to get the variable name")),
             )? {
-                if let Token::Symbol(name) = token {
-                    name
-                } else {
-                    bail!("[PARSER] Reached an unreachable state")
-                }
+                name
             } else {
                 bail!("[PARSER] Expected to get the variable name")
             };
@@ -76,6 +73,55 @@ impl Parser {
             ))
         } else {
             Err(anyhow!("[PARSER] Can't be reached"))
+        }
+    }
+
+    pub(super) fn parse_struct_definition_stmt(&mut self) -> Result<Stmt> {
+        self.expect(&Token::Keyword(Keyword::Struct))?
+            .ok_or(anyhow!("[PARSER] Can't be reached (EOF)"))?;
+        if let Token::Symbol(name) = self
+            .expect(&Token::Symbol("whatever".to_string()))?
+            .ok_or(anyhow!("[PARSER] Reached EOF in struct definition."))?
+        {
+            self.expect(&Token::OpeningScope)?
+                .ok_or(anyhow!("[PARSER] Reached EOF in struct definition"))?;
+            let mut map: UniqueKeyHashMap<String, StructFieldInfo> = UniqueKeyHashMap::new();
+            while self.has_token() && !matches!(self.current, Some(Token::ClosingScope)) {
+                let is_static = if let Some(Token::Keyword(Keyword::Static)) = self.current {
+                    self.expect(&Token::Keyword(Keyword::Static))?;
+                    true
+                } else {
+                    false
+                };
+
+                let token = self.advance().expect(
+                    "[PANIC] Unreachable, has_token() returned true but advance() returned None",
+                );
+                match token {
+                    Token::Symbol(name) => {
+                        self.expect_error(&Token::Colon, Some(anyhow!("[PARSER] Expected type declaration after name of field in struct definition")))?;
+                        let field_type = self.parse_type(BindingPower::Default.to_type())?;
+                        self.expect(&Token::Separator)?;
+
+                        map.insert(name.clone(), StructFieldInfo::new(name.clone(), field_type, is_static)).map_err(|e| {anyhow!("[PARSER] Property {name} has already been declared in struct definition")})?;
+                    }
+                    Token::EndOfFile | Token::Unknown => {
+                        unreachable!()
+                    }
+                    _ => {
+                        bail!("[PARSER] Unexpected token {token:?} in struct definition")
+                    }
+                }
+            }
+
+            self.expect(&Token::ClosingScope)?
+                .ok_or(anyhow!("[PARSER] Reached EOF in struct definition"))?;
+            Ok(Stmt::StructDeclaration {
+                identifier: name,
+                fields: map.to_vec(),
+            })
+        } else {
+            bail!("[PARSER] Expected identifier ")
         }
     }
 }

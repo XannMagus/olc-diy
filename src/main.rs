@@ -24,6 +24,11 @@ fn main() {
         path_buf.push("examples/01.lang");
         path_buf
     };
+    let path_3 = {
+        let mut path_buf = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        path_buf.push("examples/02.lang");
+        path_buf
+    };
 
     loop {
         println!("Solve ('quit' or 'exit' to exit):");
@@ -48,6 +53,10 @@ fn main() {
             input = fs::read_to_string(&path_2).unwrap_or("".to_string());
         }
 
+        if input.eq_ignore_ascii_case("file2") {
+            input = fs::read_to_string(&path_3).unwrap_or("".to_string());
+        }
+
         let result = process(&input);
         match result {
             Ok(_) => {}
@@ -61,8 +70,13 @@ fn main() {
 }
 
 fn process(expr: &String) -> Result<()> {
-    let mut parser = Parser::new(Lexer::new(expr.to_string()).tokenize()?);
-    let ast = parser.parse()?;
+    // Stage 1: Lexer/Tokenizer -> Token List
+    let tokens = Lexer::new(expr.to_string()).tokenize()?;
+
+    // Stage 2: Parser -> AST
+    let ast = Parser::new(tokens).parse()?;
+
+
     debug_println!("{}", Displayable(ast));
 
     Ok(())

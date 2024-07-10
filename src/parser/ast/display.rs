@@ -3,7 +3,7 @@ use crate::parser::ast::{Expr, Stmt, Type};
 use crate::parser::utilities::ToDoc;
 
 impl ToDoc for Expr {
-    fn to_doc<'a>(&self, allocator: &'a BoxAllocator) -> DocBuilder<'a, BoxAllocator> {
+    fn to_doc<'a>(&'a self, allocator: &'a BoxAllocator) -> DocBuilder<'a, BoxAllocator> {
         match self {
             Expr::Number(n) => allocator.text(n.to_string()),
             Expr::String(s) => allocator.text(format!("\"{s}\"")),
@@ -50,7 +50,7 @@ impl ToDoc for Expr {
 }
 
 impl ToDoc for Stmt {
-    fn to_doc<'a>(&self, allocator: &'a BoxAllocator) -> DocBuilder<'a, BoxAllocator> {
+    fn to_doc<'a>(&'a self, allocator: &'a BoxAllocator) -> DocBuilder<'a, BoxAllocator> {
         match self {
             Stmt::Block(stmts) => {
                 let mut docs = vec![allocator.text("{"), allocator.line()];
@@ -108,12 +108,23 @@ impl ToDoc for Stmt {
 
                 allocator.concat(docs)
             }
+            Stmt::StructDeclaration { identifier, fields } => {
+                allocator.concat([
+                    allocator.text("Struct type definition").append(allocator.line()),
+
+                    allocator.text("Name: ").nest(2),
+                    allocator.text(identifier).nest(2),
+                    allocator.line(),
+
+                    fields.to_doc(allocator)
+                ])
+            }
         }
     }
 }
 
 impl ToDoc for Type {
-    fn to_doc<'a>(&self, allocator: &'a BoxAllocator) -> DocBuilder<'a, BoxAllocator> {
+    fn to_doc<'a>(&'a self, allocator: &'a BoxAllocator) -> DocBuilder<'a, BoxAllocator> {
         match self {
             Type::Symbol(name) => allocator.text(name.clone()),
             Type::Array(subtype) => allocator.text("Array<").append(subtype.to_doc(&allocator).nest(2)).append(allocator.text(">")),
