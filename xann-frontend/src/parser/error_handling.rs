@@ -1,9 +1,13 @@
-use anyhow::{anyhow, Error};
 use crate::lexer::Token;
 use crate::parser::Parser;
+use anyhow::{anyhow, Error};
 
 impl Parser {
-    pub(super) fn expect_error_with_fn<F>(&mut self, check: F, err: Option<Error>) -> anyhow::Result<Option<Token>>
+    pub(super) fn expect_error_with_fn<F>(
+        &mut self,
+        check: F,
+        err: Option<Error>,
+    ) -> anyhow::Result<Option<Token>>
     where
         F: Fn(&Token) -> bool,
     {
@@ -23,7 +27,11 @@ impl Parser {
         }
     }
 
-    pub(super) fn expect_error(&mut self, token_kind: &Token, err: Option<Error>) -> anyhow::Result<Option<Token>> {
+    pub(super) fn expect_error(
+        &mut self,
+        token_kind: &Token,
+        err: Option<Error>,
+    ) -> anyhow::Result<Option<Token>> {
         let err = if let Some(err) = err {
             Some(err)
         } else {
@@ -38,5 +46,4 @@ impl Parser {
     pub(super) fn expect(&mut self, token_kind: &Token) -> anyhow::Result<Option<Token>> {
         self.expect_error(token_kind, None)
     }
-
 }

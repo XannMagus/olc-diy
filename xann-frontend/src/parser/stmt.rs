@@ -1,10 +1,10 @@
 use anyhow::{anyhow, bail, Result};
 
+use crate::ast::{Stmt, StructFieldInfo};
 use crate::lexer::{Keyword, OperatorKind, Token};
-use crate::parser::ast::{Stmt, StructFieldInfo};
 use crate::parser::binding_power::BindingPower;
-use crate::parser::Parser;
 use crate::parser::utilities::UniqueKeyHashMap;
+use crate::parser::Parser;
 
 impl Parser {
     pub(super) fn parse_statement(&mut self) -> Result<Stmt> {

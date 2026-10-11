@@ -5,28 +5,24 @@ use std::path::PathBuf;
 use anyhow::Result;
 use debug_print::debug_println;
 
-use crate::lexer::Lexer;
-use crate::parser::{Displayable, Parser};
-
-mod lexer;
-mod parser;
+use xann_frontend::{parse, Displayable};
 
 fn main() {
     let mut handle = stdin().lock();
     let mut input = String::new();
     let path_1 = {
         let mut path_buf = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        path_buf.push("examples/00.lang");
+        path_buf.push("../examples/00.lang");
         path_buf
     };
     let path_2 = {
         let mut path_buf = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        path_buf.push("examples/01.lang");
+        path_buf.push("../examples/01.lang");
         path_buf
     };
     let path_3 = {
         let mut path_buf = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        path_buf.push("examples/02.lang");
+        path_buf.push("../examples/02.lang");
         path_buf
     };
 
@@ -70,12 +66,7 @@ fn main() {
 }
 
 fn process(expr: &String) -> Result<()> {
-    // Stage 1: Lexer/Tokenizer -> Token List
-    let tokens = Lexer::new(expr.to_string()).tokenize()?;
-
-    // Stage 2: Parser -> AST
-    let ast = Parser::new(tokens).parse()?;
-
+    let ast = parse(expr)?;
 
     debug_println!("{}", Displayable(ast));
 

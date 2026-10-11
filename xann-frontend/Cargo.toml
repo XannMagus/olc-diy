@@ -1,0 +1,10 @@
+[package]
+name = "xann-frontend"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+pretty.workspace = true
+xann-core.workspace = true
