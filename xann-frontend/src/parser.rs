@@ -1,18 +1,15 @@
 use anyhow::Result;
 
+use crate::ast::Stmt;
 use crate::lexer::{Token, TokenQueue};
-use crate::parser::ast::Stmt;
 
-pub use utilities::Displayable;
-
-mod ast;
 mod binding_power;
+mod error_handling;
 mod expr;
 mod lookups;
 mod stmt;
-mod error_handling;
-mod utilities;
 mod types;
+mod utilities;
 
 pub struct Parser {
     tokens: TokenQueue,

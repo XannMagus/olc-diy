@@ -1,5 +1,5 @@
+use crate::ast::Type;
 use crate::lexer::Token;
-use crate::parser::ast::Type;
 use crate::parser::binding_power::{BindingPower, TypeBindingPower};
 use crate::parser::Parser;
 use anyhow::{anyhow, Result};

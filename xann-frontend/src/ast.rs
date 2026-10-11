@@ -1,4 +1,4 @@
-use crate::lexer::OperatorKind;
+use xann_core::OperatorKind;
 
 pub use structs::StructFieldInfo;
 
@@ -39,7 +39,7 @@ pub enum Stmt {
     StructDeclaration {
         identifier: String,
         fields: Vec<StructFieldInfo>,
-    }
+    },
 }
 
 #[derive(Debug)]

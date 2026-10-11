@@ -1,0 +1,16 @@
+[package]
+name = "xann-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "xann"
+path = "src/main.rs"
+
+[dependencies]
+anyhow.workspace = true
+debug_print.workspace = true
+xann-frontend.workspace = true
+xann-interpreter.workspace = true
+xann-compiler.workspace = true

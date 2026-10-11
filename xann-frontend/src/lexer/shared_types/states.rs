@@ -4,7 +4,7 @@ use std::str::Chars;
 use anyhow::{anyhow, Result};
 
 use crate::lexer::shared_types::keywords::Keyword;
-use crate::lexer::shared_types::operators::OperatorKind;
+use crate::lexer::shared_types::operators::parse_operator;
 use crate::lexer::shared_types::Token;
 use crate::lexer::TokenQueue;
 
@@ -290,12 +290,12 @@ impl State for OperatorState {
             if OPERATOR_CHARACTERS[c as usize] {
                 let mut tmp_op = temporary_data.current_token_string.clone();
                 tmp_op.push(c);
-                if let Ok(_) = OperatorKind::from(&tmp_op) {
+                if let Ok(_) = parse_operator(&tmp_op) {
                     temporary_data.current_token_string.push(c);
                     temporary_data.chars.next();
                     Ok((Box::new(Self), temporary_data))
                 } else {
-                    if let Ok(op) = OperatorKind::from(&temporary_data.current_token_string) {
+                    if let Ok(op) = parse_operator(&temporary_data.current_token_string) {
                         temporary_data.current_token = Token::Operator(op);
                         Ok((Box::new(CompleteToken), temporary_data))
                     } else {
@@ -305,7 +305,7 @@ impl State for OperatorState {
                     }
                 }
             } else {
-                if let Ok(op) = OperatorKind::from(&temporary_data.current_token_string) {
+                if let Ok(op) = parse_operator(&temporary_data.current_token_string) {
                     temporary_data.current_token = Token::Operator(op);
                     Ok((Box::new(CompleteToken), temporary_data))
                 } else {

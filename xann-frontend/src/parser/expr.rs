@@ -1,8 +1,8 @@
-use anyhow::{anyhow, bail, Result};
+use crate::ast::Expr;
 use crate::lexer::{OperatorKind, Token};
-use crate::parser::ast::Expr;
 use crate::parser::binding_power::BindingPower;
 use crate::parser::Parser;
+use anyhow::{anyhow, bail, Result};
 
 impl Parser {
     pub(super) fn parse_expression(&mut self, bp: BindingPower) -> Result<Expr> {
@@ -46,7 +46,11 @@ impl Parser {
         Ok(Expr::binary(left, operator, right))
     }
 
-    pub(super) fn parse_assignment_expression(&mut self, left: Expr, bp: BindingPower) -> Result<Expr> {
+    pub(super) fn parse_assignment_expression(
+        &mut self,
+        left: Expr,
+        bp: BindingPower,
+    ) -> Result<Expr> {
         let operator = self.get_op()?;
         let right = self.parse_expression(bp)?;
 
@@ -87,7 +91,10 @@ impl Parser {
 
 impl Parser {
     fn get_op(&mut self) -> Result<OperatorKind> {
-        if let Token::Operator(op) = self.advance().ok_or(anyhow!("[PARSER] Should be unreachable"))? {
+        if let Token::Operator(op) = self
+            .advance()
+            .ok_or(anyhow!("[PARSER] Should be unreachable"))?
+        {
             Ok(op)
         } else {
             bail!("[PARSER] Expected an Operator Token")

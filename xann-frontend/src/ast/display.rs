@@ -1,6 +1,6 @@
+use crate::ast::{Expr, Stmt, Type};
+use crate::formatting::ToDoc;
 use pretty::{BoxAllocator, DocAllocator, DocBuilder};
-use crate::parser::ast::{Expr, Stmt, Type};
-use crate::parser::utilities::ToDoc;
 
 impl ToDoc for Expr {
     fn to_doc<'a>(&'a self, allocator: &'a BoxAllocator) -> DocBuilder<'a, BoxAllocator> {
@@ -92,8 +92,8 @@ impl ToDoc for Stmt {
                     } else {
                         allocator.text("None")
                     }
-                        .nest(2)
-                        .append(allocator.line()),
+                    .nest(2)
+                    .append(allocator.line()),
                 );
                 docs.push(allocator.text("Type: ").nest(2));
                 docs.push(
@@ -102,23 +102,21 @@ impl ToDoc for Stmt {
                     } else {
                         allocator.text("None")
                     }
-                        .nest(2)
-                        .append(allocator.line()),
+                    .nest(2)
+                    .append(allocator.line()),
                 );
 
                 allocator.concat(docs)
             }
-            Stmt::StructDeclaration { identifier, fields } => {
-                allocator.concat([
-                    allocator.text("Struct type definition").append(allocator.line()),
-
-                    allocator.text("Name: ").nest(2),
-                    allocator.text(identifier).nest(2),
-                    allocator.line(),
-
-                    fields.to_doc(allocator)
-                ])
-            }
+            Stmt::StructDeclaration { identifier, fields } => allocator.concat([
+                allocator
+                    .text("Struct type definition")
+                    .append(allocator.line()),
+                allocator.text("Name: ").nest(2),
+                allocator.text(identifier).nest(2),
+                allocator.line(),
+                fields.to_doc(allocator),
+            ]),
         }
     }
 }
@@ -127,7 +125,10 @@ impl ToDoc for Type {
     fn to_doc<'a>(&'a self, allocator: &'a BoxAllocator) -> DocBuilder<'a, BoxAllocator> {
         match self {
             Type::Symbol(name) => allocator.text(name.clone()),
-            Type::Array(subtype) => allocator.text("Array<").append(subtype.to_doc(&allocator).nest(2)).append(allocator.text(">")),
+            Type::Array(subtype) => allocator
+                .text("Array<")
+                .append(subtype.to_doc(&allocator).nest(2))
+                .append(allocator.text(">")),
         }
     }
 }

@@ -1,8 +1,8 @@
-use anyhow::Result;
+use crate::ast::{Expr, Stmt, Type};
 use crate::lexer::{Keyword, OperatorKind, Token};
-use crate::parser::ast::{Expr, Stmt, Type};
 use crate::parser::binding_power::BindingPower;
 use crate::parser::Parser;
+use anyhow::Result;
 
 type NudHandler = fn(&mut Parser) -> Result<Expr>;
 type LedHandler = fn(&mut Parser, Expr, BindingPower) -> Result<Expr>;
@@ -13,9 +13,9 @@ type TypeLedHandler = fn(&mut Parser, Type, BindingPower) -> Result<Type>;
 impl Parser {
     pub(super) fn nud(token: &Token) -> Option<NudHandler> {
         match token {
-            Token::NumericLiteral(_)
-            | Token::StringLiteral(_)
-            | Token::Symbol(_) => Some(Self::parse_primary_expr),
+            Token::NumericLiteral(_) | Token::StringLiteral(_) | Token::Symbol(_) => {
+                Some(Self::parse_primary_expr)
+            }
             Token::Operator(OperatorKind::Difference) => Some(Self::parse_prefix_expression),
             Token::OpeningParenthesis => Some(Self::parse_grouping_expression),
             _ => None,
